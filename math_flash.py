@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pickle
 import os.path
 from os import path
-from random import randrange
+from random import randrange, choice
 # from tabulate import tabulate
 from prettytable import PrettyTable 
 from argparse import ArgumentParser
@@ -68,7 +68,7 @@ parser.add_argument(
     action="store",
     type=int,
     default=3,
-    help="1 = Addition, 2 = Subtraction, 3 = Multiplication, 4 = Division",
+    help="1 = Addition, 2 = Subtraction, 3 = Multiplication, 4 = Division, 5 = mix add/sub",
 )
 # parser.add_argument(
 #     "-r",
@@ -81,7 +81,7 @@ parser.add_argument(
 
 
 x = PrettyTable()
-x.field_names =  [ "problem_number","first","second","Answer","Input","Time Taken","Result" ]
+x.field_names =  [ "problem_number","problem_type","first","second","Answer","Input","Time Taken","Result" ]
 
 
 
@@ -93,18 +93,25 @@ total_time = 0
 datestr = gen_date_str()
 
 
-if args.type_of_problem == 3:
-    print("Game type: Multiplication")
-    
-elif args.type_of_problem == 4:
-    print("Game type: Division")
-    print("No decimal places at the moment, will add later.")
-
-elif args.type_of_problem == 1:
-    print("Game type: Addition")
-
-elif args.type_of_problem == 2:
-    print("Game type: Subtraction")
+def correct_answer(typ,num1,num2):
+    if typ == 3:
+        print("Problem type: Multiplication")
+        answer = num1*num2
+    elif typ == 4:
+        print("Problem type: Division")
+        print("No decimal places at the moment, will add later.")
+        answer = int(num1/num2)
+    elif typ == 1:
+        print("Problem type: Addition")
+        ## Maybe do a reordering such that no negative answers
+        answer =  num1+num2
+    elif typ == 2:
+        print("Problem type: Subtraction")
+        answer =  num1-num2
+    elif typ == 5:
+        # print("Problem type: Mixed")
+        typ,num1,num2,answer = correct_answer(choice((1,2)),num1,num2)
+    return typ,num1,num2,answer
 
 
 
@@ -114,29 +121,21 @@ for problem_number in range(0,args.number_of_problems):
     ## This is ugly but it allows for us to get zero padded digits.
     print(f'{numbers[0]}'.zfill(args.number_of_digits) + '\n' + f'{numbers[1]}'.zfill(args.number_of_digits) )
 
-    if args.type_of_problem == 3:
-        correct_answer = numbers[0]*numbers[1]
-    elif args.type_of_problem == 4:
-        correct_answer = int(numbers[0]/numbers[1])
-    elif args.type_of_problem == 1:
-        correct_answer =  numbers[0]+numbers[1]
-    elif args.type_of_problem == 2:
-        correct_answer =  numbers[0]-numbers[1]
-
-
-
+    problem_type,num1,num2,answer = correct_answer(args.type_of_problem,numbers[0],numbers[1])
 
     s, thetime = timed_input('Answer?: ')
 
-    if int(s) == correct_answer:
+    if int(s) == answer:
         print('Correct!')
         mark = "Correct"
         correct += 1
     else:
-        print('Incorrect! Answer was: {}'.format(correct_answer))
+        print('Incorrect! Answer was: {}'.format(answer))
         mark = "Incorrect"
-    problem_index[problem_number] = [problem_number,numbers[0],numbers[1],correct_answer,s,str(thetime)[0:5],mark ]
-    x.add_row([problem_number,numbers[0],numbers[1],correct_answer,s,str(thetime)[0:5],mark ])
+    
+    problem_index[problem_number] = [problem_number,problem_type,numbers[0],numbers[1],answer,s,str(thetime)[0:5],mark ]
+
+    x.add_row([problem_number,problem_type,numbers[0],numbers[1],answer,s,str(thetime)[0:5],mark ])
 
 
     total_time += thetime
@@ -144,6 +143,8 @@ problem_index['summary']= f'Got {correct} out of {args.number_of_problems}. in {
 print(x)
 print(problem_index['summary'])
 
+
+## Why tho?
 pickle.dump(problem_index[problem_number], open(datestr + ".p", "wb" ) )
 
 

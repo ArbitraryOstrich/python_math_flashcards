@@ -5,8 +5,7 @@ import matplotlib.pyplot as plt
 import pickle
 import os.path
 from os import path
-from random import seed
-from random import randint
+from random import randrange
 # from tabulate import tabulate
 from prettytable import PrettyTable 
 from argparse import ArgumentParser
@@ -28,6 +27,9 @@ def gen_date_str():
     datestr = datestr[0:-7]
     return datestr
 
+def rand_num_by_len(length=2):
+    top = 10**length
+    return randrange(1,top)
 
 ## Ideally this program will produce various math problems to work on.
 ## Addition
@@ -50,14 +52,15 @@ parser.add_argument(
     type=int,
     help="How many problems would you like to see",
 )
-# parser.add_argument(
-#     "-d,
-#     "--number_of_digits",
-#     dest="number_of_digits",
-#     action="store",
-#     type="int",
-#     help="How many digits in each number",
-# )
+parser.add_argument(
+    "-d",
+    "--number_of_digits",
+    # default=2,
+    dest="number_of_digits",
+    action="store",
+    type=int,
+    help="How many digits in each number",
+)
 # parser.add_argument(
 #     "-t",
 #     "--type_of_problem",
@@ -67,7 +70,7 @@ parser.add_argument(
 #     help="1 = Addition, 2 = Subtraction, 3 = Multiplication, 4 = Division",
 # )
 # parser.add_argument(
-#     "-r,
+#     "-r",
 #     "--problem_rush",
 #     dest="problem_rush",
 #     action="store",
@@ -93,9 +96,13 @@ total_time = 0
 
 datestr = gen_date_str()
 
+
+
 for problem_number in range(0,args.number_of_problems):
-    numbers = [randint(1,99),randint(1,99)]
-    print("%03d\n%03d" % (numbers[0],  numbers[1]))
+    numbers = [rand_num_by_len(args.number_of_digits),rand_num_by_len(args.number_of_digits)]
+    ## This is ugly but it allows for us to get zero padded digits.
+    print(f'{numbers[0]}'.zfill(args.number_of_digits) + '\n' + f'{numbers[1]}'.zfill(args.number_of_digits) )
+    
     s, thetime = timed_input('Answer?: ')
     if int(s) == (numbers[0]*numbers[1]):
         print('Correct!')

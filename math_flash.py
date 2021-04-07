@@ -12,10 +12,18 @@ from argparse import ArgumentParser
 ## https://stackoverflow.com/questions/3756278/timing-recording-input-in-python-3-1
 import time
 
-def timed_input(prompt):
-    start = time.time()
+def timed_input(prompt, start=0):
+    if (start == 0):
+        start = time.time()
     s = input(prompt)
-    return s, time.time() - start
+    try:
+        s = int(s)
+        return s, time.time() - start
+    except ValueError:
+        print("Please input int's only \n")
+        timed_input(prompt, start)
+
+    
 
 def gen_date_str():
     ## When does your day end?
@@ -110,6 +118,7 @@ def correct_answer(typ,num1,num2):
         answer =  num1-num2
     elif typ == 5:
         # print("Problem type: Mixed")
+        ## yay recursion
         typ,num1,num2,answer = correct_answer(choice((1,2)),num1,num2)
     return typ,num1,num2,answer
 
@@ -125,7 +134,7 @@ for problem_number in range(0,args.number_of_problems):
 
     s, thetime = timed_input('Answer?: ')
 
-    if int(s) == answer:
+    if s == answer:
         print('Correct!')
         mark = "Correct"
         correct += 1

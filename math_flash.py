@@ -11,6 +11,7 @@ from prettytable import PrettyTable
 from argparse import ArgumentParser
 ## https://stackoverflow.com/questions/3756278/timing-recording-input-in-python-3-1
 import time
+import datetime
 
 
 from tinydb import Query, TinyDB, where
@@ -66,15 +67,32 @@ parser.add_argument(
 # )
 
 parser.add_argument(
-    "-a",
+    "-pa",
     "--averages",
-    nargs=1,
-    # default="",
-    # const=" ",
-    # metavar=('start_date', 'end_date'),
+    nargs="*",
     dest="print_averages",
     action="store",
-    help="Print a progress report from x day forward",
+    help="Print the progress for a day",
+)
+
+parser.add_argument(
+    "-pd",
+    "--dates_average",
+    nargs=2,
+    metavar=('start_date', 'end_date'),
+    dest="dates_average",
+    action="store",
+    help="Print the average times between two dates",
+)
+
+parser.add_argument(
+    "-pr",
+    "--report_range",
+    nargs='?',
+    const='10',
+    dest="averages_days",
+    action="store",
+    help="Print the average time for a x days",
 )
 
 
@@ -122,50 +140,59 @@ def rand_num_by_len(length=2):
     top = 10**length
     return randrange(1,top)
 
-def print_averages(db, d_Query, datestr): 
+def print_day_average(db, d_Query, datestr): 
 
     try:
         days_results = db.get(d_Query.date  == datestr)
     except:
-        print('Date not found')
+        print(f'No data for {datestr}')
         return None
 
-    times = { "1" : [], "2" : [], "3": [], "4" : []}
-    for a in range(0,len(days_results['iterations'])):
-        for b in range(0,len(days_results['iterations'][a]['results'])):
-            problem_type = int(days_results['iterations'][a]['results'][f"{b}"][1])
-            time_taken = float(days_results['iterations'][a]['results'][f"{b}"][6])
-            times[f"{problem_type}"].append(time_taken)
 
-    for a in range(1,5):
-        if len(times[f"{a}"]) != 0:
-            avg_time = sum(times[f"{a}"])/len(times[f"{a}"])
-            print(f" Problem type: {a} Average Time: {avg_time}")
+    if days_results is not None:
+        print('-------------')
+        print(datestr)
+        times = { "1" : [], "2" : [], "3": [], "4" : []}
+        for a in range(0,len(days_results['iterations'])):
+            for b in range(0,len(days_results['iterations'][a]['results'])):
+                problem_type = int(days_results['iterations'][a]['results'][f"{b}"][1])
+                time_taken = float(days_results['iterations'][a]['results'][f"{b}"][6])
+                times[f"{problem_type}"].append(time_taken)
 
-    
-
+        for a in range(1,5):
+            if len(times[f"{a}"]) != 0:
+                avg_time = sum(times[f"{a}"])/len(times[f"{a}"])
+                print(f" Problem type: {a} Average Time: {avg_time}")
+    else:
+        print(f"{datestr} has no data")
 
 def print_range(db, d_Query, start_date, end_date):
-    date_range = pd.date_range(pd.to_datetime(start_date),pd.to_datetime(end_date),freq='d')
+    date_range = pd.date_range(start_date,end_date,freq='d')
     for date in date_range:
             #Format each date
             date = str(date)
             date = date[0:10]
-            date = date.replace('-','')
-            show_text_report(db, d_Query, date)
+            # date = date.replace('-','')
+            print_day_average(db, d_Query, date)
 
 def save_results(db, d_Query, problem_index, datestr, timestr):
     if db.get(d_Query.date  == datestr):
         temp_storage = db.get(d_Query.date  == datestr)
-        temp_storage['iterations'].append({'timestamp' : timestr  , 'results': problem_index })
+        temp_storage['iterations'].append({
+            'timestamp' : timestr  , 
+            'results': problem_index 
+            })
         db.update({
             'date': datestr,  
             'iterations' :  temp_storage['iterations']
-            })
+            }, d_Query.date  == datestr)
     else:
         db.insert({
             'date': datestr,  
-            'iterations' : [{'timestamp' : timestr  , 'results': problem_index }]
+            'iterations' : [{
+                'timestamp' : timestr  , 
+                'results': problem_index 
+                }]
         })
     
 def correct_answer(typ,num1,num2):
@@ -231,10 +258,18 @@ if __name__ == "__main__":
     correct = 0
     total_time = 0
     db, d_Query = open_db()
-    
+
+
     if args.print_averages:
-        print_averages(db, d_Query, datestr)
-        # exit()
+        print_day_average(db, d_Query, args.print_averages)
+    elif args.averages_days:
+        ## pr
+        start_date = datetime.datetime.now() - datetime.timedelta(days=int(args.averages_days))
+        start_date = start_date.strftime("%Y-%m-%d")
+        print_range(db, d_Query, start_date, datestr)
+    elif args.dates_average:
+        ## pd
+        print_range(db, d_Query, args.print_averages[0], args.print_averages[1])
     else:
         show_problems(db, d_Query)
 

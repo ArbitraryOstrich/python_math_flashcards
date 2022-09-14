@@ -5,9 +5,15 @@ I probably wouldn't use tinydb for stats tracking like I have here again.
 Types of flash card it will generate.
 
    Multiplication
+
    Division
+
    Addition
+
    Subtraction
+
    Mixed
+
    base10 to binary
+
    binary to base10

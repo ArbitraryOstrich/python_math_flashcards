@@ -1,10 +1,5 @@
 import numpy as np
 import pandas as pd
-import calplot
-import matplotlib.pyplot as plt
-import pickle
-import os.path
-from os import path
 from random import randrange, choice
 
 # from tabulate import tabulate
@@ -14,13 +9,12 @@ from argparse import ArgumentParser
 ## https://stackoverflow.com/questions/3756278/timing-recording-input-in-python-3-1
 import time
 import datetime
-
-
 from tinydb import Query, TinyDB, where
 from tinydb.operations import delete
 from pathlib import Path
 import pandas as pd
 
+import os
 
 ## TODO: Fix up database sytem move from pickle to tinydb
 ## ----- Makes single DB file.
@@ -213,7 +207,8 @@ def correct_answer(typ, num1, num2):
         answer = int(num1 / num2)
     elif typ == 1:
         print("Problem type: Addition")
-        ## Maybe do a reordering such that no negative answers
+        ## Maybe do a reordering such that no negative answers?
+        ## can just abs the result.
         answer = num1 + num2
     elif typ == 2:
         print("Problem type: Subtraction")
